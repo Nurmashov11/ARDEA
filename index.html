@@ -1,0 +1,557 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ardea</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700;800&display=swap">
+<style>
+/* Layout: sticky bar (logo, language, order), split hero with live color demo, how-to-order steps,
+   filterable catalog where every card has its own color row and an add button, order sheet, contact band.
+   Palette: cool grey-blue ground, deep ink, heron-blue accent. The furniture color is the only loud thing. */
+:root {
+  --bg: #EDF0F2;
+  --surface: #FFFFFF;
+  --ink: #15222C;
+  --muted: #55646F;
+  --line: #D5DBE0;
+  --accent: #1F5F86;
+  --accent-ink: #FFFFFF;
+  --scrim: rgba(10, 20, 28, .5);
+  --c: #3AA6B9;
+  --font-display: "Montserrat", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F171D; --surface: #17232C; --ink: #E8EEF2; --muted: #9AABB7;
+    --line: #2A3A45; --accent: #5FB0DD; --accent-ink: #0B1820; --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F171D; --surface: #17232C; --ink: #E8EEF2; --muted: #9AABB7;
+  --line: #2A3A45; --accent: #5FB0DD; --accent-ink: #0B1820; --scrim: rgba(0, 0, 0, .6); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--font-body); padding-block: 0; }
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  background: var(--bg); z-index: 30;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.12; }
+p { margin: 0; }
+.wrap {
+  max-width: 1120px; margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 600 15px/1.1 var(--font-body); padding: 13px 20px; border-radius: 10px;
+  border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  cursor: pointer; text-decoration: none; text-align: center;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.small { padding: 10px 14px; font-size: 14px; }
+.btn.wide { width: 100%; }
+
+/* sticky bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; align-items: center; gap: 12px; padding-block: 12px; }
+.logo { font-family: var(--font-display); font-weight: 800; font-size: 24px; letter-spacing: .16em; text-transform: uppercase; margin-right: auto; }
+.bar-phone { display: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lang { display: inline-flex; border: 1.5px solid var(--line); border-radius: 10px; overflow: hidden; }
+.lang button { font: 600 14px/1 var(--font-body); padding: 10px 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.cart-btn { position: relative; }
+.badge {
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--accent-ink); color: var(--accent);
+  font-size: 13px; font-weight: 700; display: inline-grid; place-items: center; font-variant-numeric: tabular-nums;
+}
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; padding-block: 36px 40px; }
+.hero > * { min-width: 0; }
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { font-size: clamp(32px, 5.2vw, 54px); font-weight: 800; margin-top: 12px; }
+.hero h1 span { color: var(--c); transition: color .25s; }
+.lead { margin-top: 18px; color: var(--muted); max-width: 54ch; font-size: 17px; }
+.picker-label { margin-top: 26px; font-size: 14px; color: var(--muted); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.picker-label b { color: var(--ink); font-size: 16px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.sw {
+  width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--surface);
+  background: var(--sw); cursor: pointer; padding: 0; box-shadow: 0 0 0 1.5px var(--line);
+}
+.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--accent); }
+.sw:hover { transform: translateY(-1px); }
+.small-note { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.stage {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 24px;
+  padding: 20px; aspect-ratio: 5 / 4; max-width: 100%; display: grid; place-items: center;
+}
+.stage svg { width: 100%; height: 100%; }
+
+/* steps */
+.steps { list-style: none; margin: 0; padding: 0 0 48px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.steps li::before {
+  content: counter(s); flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: var(--accent-ink); font-weight: 700; display: grid; place-items: center; font-size: 15px;
+}
+.steps b { display: block; font-size: 16px; }
+.steps span { color: var(--muted); font-size: 14px; }
+
+/* catalog */
+.sec-head { display: flex; justify-content: space-between; align-items: end; gap: 20px; flex-wrap: wrap; }
+.sec-head h2 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 800; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab {
+  font: 600 14px/1 var(--font-body); padding: 11px 16px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: transparent; color: var(--ink); cursor: pointer;
+}
+.tab[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 24px; padding-bottom: 64px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; }
+.card .pic { padding: 18px 18px 6px; aspect-ratio: 5 / 4; display: grid; place-items: center; }
+.card .pic svg { width: 100%; height: 100%; }
+.card .body { padding: 6px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.card h3 { font-size: 19px; font-weight: 700; }
+.card p { color: var(--muted); font-size: 15px; }
+.card .colorline { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: auto; padding-top: 8px; }
+.card .colorline b { color: var(--ink); }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 1.5px var(--line); flex: none; }
+.card .swatches { gap: 7px; margin-top: 0; }
+.card .sw { width: 28px; height: 28px; }
+.card .btn { margin-top: 8px; width: 100%; }
+
+/* order sheet */
+.sheet { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: flex-end; }
+.shade { position: absolute; inset: 0; background: var(--scrim); }
+.panel {
+  position: relative; width: min(460px, 100%); height: 100%; background: var(--surface); color: var(--ink);
+  display: flex; flex-direction: column; border-left: 1px solid var(--line);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.p-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px max(18px, env(safe-area-inset-right, 0px)) 12px 18px; border-bottom: 1px solid var(--line); }
+.p-head h2 { font-size: 22px; font-weight: 800; }
+.p-body { flex: 1; overflow-y: auto; padding: 16px max(18px, env(safe-area-inset-right, 0px)) 16px 18px; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+.empty { color: var(--muted); padding: 24px 0; }
+.item { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.item .thumb { background: var(--bg); border-radius: 10px; padding: 4px; }
+.item .thumb svg { width: 100%; display: block; }
+.item h3 { font-size: 15px; font-weight: 700; }
+.item .col { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.item .ctl { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.qty { display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 8px; }
+.qty button { width: 34px; height: 34px; border: 0; background: transparent; color: var(--ink); font-size: 18px; cursor: pointer; }
+.qty span { min-width: 28px; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.link { background: none; border: 0; color: var(--muted); font: 500 13px var(--font-body); text-decoration: underline; cursor: pointer; padding: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+.field input, .field textarea {
+  font: 16px var(--font-body); color: var(--ink); background: var(--bg); border: 1.5px solid var(--line);
+  border-radius: 10px; padding: 11px 12px; width: 100%;
+}
+.field textarea { min-height: 76px; resize: vertical; }
+.p-foot { padding: 14px max(18px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) 18px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.p-foot .hint { font-size: 13px; color: var(--muted); }
+
+/* contact */
+.contact { background: var(--ink); color: var(--bg); }
+.contact .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 32px; padding-block: 56px; align-items: center; }
+.contact .wrap > * { min-width: 0; }
+.contact h2 { font-size: clamp(26px, 3.6vw, 38px); font-weight: 800; }
+.contact p { opacity: .8; margin-top: 12px; max-width: 48ch; }
+.big-num { font-family: var(--font-display); font-weight: 800; font-size: clamp(28px, 4.4vw, 42px); font-variant-numeric: tabular-nums; }
+.contact .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.contact .btn { background: var(--bg); color: var(--ink); border-color: var(--bg); }
+.contact .btn.ghost { background: transparent; color: var(--bg); border-color: var(--bg); }
+footer { padding-block: 22px; font-size: 13px; color: var(--muted); }
+
+@media (min-width: 720px) { .bar-phone { display: block; } }
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: 24px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps { grid-template-columns: 1fr; padding-bottom: 36px; }
+  .contact .wrap { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; }
+  .logo { font-size: 20px; }
+  .bar .wrap { gap: 8px; }
+  .cart-label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="logo">Ardea</div>
+    <span class="bar-phone">8 771 138 60 57</span>
+    <div class="lang" role="group" aria-label="Тіл / Язык">
+      <button type="button" data-lang="kk" aria-pressed="true">ҚАЗ</button>
+      <button type="button" data-lang="ru" aria-pressed="false">РУС</button>
+    </div>
+    <button class="btn cart-btn" type="button" id="open-cart"><span class="cart-label" data-t="cartBtn"></span><span class="badge" id="badge">0</span></button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow" data-t="eyebrow"></div>
+      <h1 data-th="h1"></h1>
+      <p class="lead" data-t="lead"></p>
+      <div class="picker-label"><span data-t="pickAll"></span> <b id="hero-color-name"></b></div>
+      <div class="swatches" id="hero-sw" role="group"></div>
+      <p class="small-note" data-t="otherColor"></p>
+    </div>
+    <div class="stage" aria-hidden="true"><div id="hero-art" style="width:100%;height:100%"></div></div>
+  </section>
+
+  <ol class="steps">
+    <li><div><b data-t="s1"></b><span data-t="s1d"></span></div></li>
+    <li><div><b data-t="s2"></b><span data-t="s2d"></span></div></li>
+    <li><div><b data-t="s3"></b><span data-t="s3d"></span></div></li>
+  </ol>
+
+  <section id="catalog">
+    <div class="sec-head">
+      <h2 data-t="catalog"></h2>
+      <div class="tabs" id="tabs" role="group"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<section class="contact" id="contact">
+  <div class="wrap">
+    <div>
+      <h2 data-t="cTitle"></h2>
+      <p data-t="cText"></p>
+    </div>
+    <div>
+      <div class="big-num">8 771 138 60 57</div>
+      <div class="actions">
+        <a class="btn" href="tel:+77711386057" data-t="call"></a>
+        <a class="btn ghost" href="https://wa.me/77711386057" target="_blank" rel="noopener">WhatsApp</a>
+        <button class="btn ghost" type="button" data-copy-phone data-t="copyNum"></button>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="wrap"><footer data-t="footer"></footer></div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="shade" data-close></div>
+  <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+    <div class="p-head">
+      <h2 id="cart-title" data-t="cartTitle"></h2>
+      <button class="btn ghost small" type="button" id="close-cart" data-close data-t="close"></button>
+    </div>
+    <div class="p-body">
+      <div id="cart-list"></div>
+      <div id="cart-form" hidden>
+        <label class="field" for="ord-name"><span data-t="name"></span><input id="ord-name" type="text" autocomplete="name"></label>
+        <label class="field" for="ord-note" style="margin-top:12px"><span data-t="note"></span><textarea id="ord-note"></textarea></label>
+      </div>
+    </div>
+    <div class="p-foot" id="cart-foot" hidden>
+      <a class="btn wide" id="send" href="https://wa.me/77711386057" target="_blank" rel="noopener" data-t="send"></a>
+      <button class="btn ghost wide" type="button" id="copy-order" data-t="copyOrder"></button>
+      <p class="hint" data-t="hint"></p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function () {
+  var PHONE = "87711386057";
+  var WA = "https://wa.me/77711386057";
+
+  var COLORS = [
+    ["Ақ", "Белый", "#F2F2EF"], ["Беж", "Бежевый", "#D9C7A8"], ["Сұр", "Серый", "#8E959C"], ["Қара", "Чёрный", "#22262B"],
+    ["Көгілдір", "Бирюзовый", "#3AA6B9"], ["Көк", "Синий", "#2F5D9B"], ["Жасыл", "Зелёный", "#3F8F5B"], ["Сары", "Жёлтый", "#E6B422"],
+    ["Қызғылт сары", "Оранжевый", "#E27B2C"], ["Қызыл", "Красный", "#C8372D"], ["Қызғылт", "Розовый", "#E58BAA"],
+    ["Күлгін", "Фиолетовый", "#7A55A8"], ["Қоңыр", "Коричневый", "#7B5535"]
+  ];
+  var DEFAULT_COLOR = 4;
+
+  var T = {
+    kk: {
+      cartBtn: "Тапсырыс", eyebrow: "Қаңқасыз мебель",
+      h1: "Диван, кресло және пуфтар кез келген <span>түсте</span>",
+      lead: "Ardea компаниясында қаңқасыз диван-төсектер, кресло-мешоктар және пуфтар бар. Түсті таңдаңыз, мебель бірден сол түске боялады.",
+      pickAll: "Барлық мебельдің түсі:", otherColor: "Тізімде жоқ түс керек пе? Бізге жазыңыз, сол түсті табамыз.",
+      s1: "Мебельді таңдаңыз", s1d: "Каталогтан диван, кресло немесе пуфты табыңыз.",
+      s2: "Түсін таңдаңыз", s2d: "Әр мебельдің түсін өзгертуге болады.",
+      s3: "Тапсырысты жіберіңіз", s3d: "Тізім WhatsApp-қа дайын мәтінмен ашылады.",
+      catalog: "Каталог", all: "Барлығы", sofa: "Дивандар", chair: "Кресло-төсек", bag: "Кресло-мешоктар", pouf: "Пуфтар",
+      color: "Түсі", anyColor: "Кез келген түсте бар", add: "Тапсырысқа қосу", added: "Қосылды",
+      cartTitle: "Менің тапсырысым", empty: "Әзірге бос. Каталогтан мебель таңдап, «Тапсырысқа қосу» батырмасын басыңыз.",
+      name: "Атыңыз", note: "Қосымша (қала, мекенжай, өлшем)", send: "WhatsApp арқылы жіберу",
+      copyOrder: "Тапсырысты көшіру", copied: "Көшірілді", close: "Жабу", remove: "Өшіру", pcs: "дана",
+      hint: "Тапсырыс WhatsApp-та ашылады, тек «Жіберу» батырмасын басасыз. Бағасын жауап ретінде жазамыз.",
+      cTitle: "Сұрақ бар ма? Хабарласыңыз", cText: "Мебельді, түсті және өлшемді айтыңыз. Бағасы мен жеткізуді өзіміз түсіндіреміз.",
+      call: "Қоңырау шалу", copyNum: "Нөмірді көшіру", footer: "Ardea · қаңқасыз диван, кресло және пуфтар",
+      greet: "Сәлеметсіз бе! Ardea сайтынан тапсырыс:", nameL: "Аты", noteL: "Қосымша"
+    },
+    ru: {
+      cartBtn: "Заказ", eyebrow: "Бескаркасная мебель",
+      h1: "Диваны, кресла и пуфы любого <span>цвета</span>",
+      lead: "В Ardea есть бескаркасные диваны-кровати, кресла-мешки и пуфы. Выберите цвет, и мебель сразу окрасится.",
+      pickAll: "Цвет всей мебели:", otherColor: "Нужного цвета нет в списке? Напишите нам, подберём.",
+      s1: "Выберите мебель", s1d: "Найдите в каталоге диван, кресло или пуф.",
+      s2: "Выберите цвет", s2d: "У каждой модели можно выбрать свой цвет.",
+      s3: "Отправьте заказ", s3d: "Список откроется в WhatsApp с готовым текстом.",
+      catalog: "Каталог", all: "Все", sofa: "Диваны", chair: "Кресла-кровати", bag: "Кресла-мешки", pouf: "Пуфы",
+      color: "Цвет", anyColor: "Есть в любом цвете", add: "Добавить в заказ", added: "Добавлено",
+      cartTitle: "Мой заказ", empty: "Пока пусто. Выберите мебель в каталоге и нажмите «Добавить в заказ».",
+      name: "Ваше имя", note: "Комментарий (город, адрес, размер)", send: "Отправить в WhatsApp",
+      copyOrder: "Скопировать заказ", copied: "Скопировано", close: "Закрыть", remove: "Удалить", pcs: "шт.",
+      hint: "Заказ откроется в WhatsApp, останется нажать «Отправить». Цену напишем в ответ.",
+      cTitle: "Есть вопросы? Свяжитесь с нами", cText: "Назовите модель, цвет и размер. Цену и доставку подскажем сами.",
+      call: "Позвонить", copyNum: "Скопировать номер", footer: "Ardea · бескаркасные диваны, кресла и пуфы",
+      greet: "Здравствуйте! Заказ с сайта Ardea:", nameL: "Имя", noteL: "Комментарий"
+    }
+  };
+
+  /* ---------- drawings (own illustrations, recolored by --c) ---------- */
+  var ST = ' stroke="rgba(0,0,0,.2)" stroke-width="1.5"';
+  var SHADOW = '<ellipse cx="100" cy="153" rx="76" ry="6" fill="var(--ink)" opacity=".1"/>';
+  function B(x, y, w, h, r, o) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="var(--c)"' + ST + '/>' +
+      (o ? '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="#000" opacity="' + o + '"/>' : '');
+  }
+  function H(x, y, w, h, r) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="#fff" opacity=".2"/>'; }
+  function SEAM(x1, x2, y) { return '<path d="M' + x1 + ' ' + y + 'H' + x2 + '" stroke="#000" stroke-opacity=".16" stroke-width="1.5" fill="none"/>'; }
+  function G(rot, cx, cy, inner) { return '<g transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')">' + inner + '</g>'; }
+  function svg(inner) { return '<svg viewBox="0 0 200 160" role="img" focusable="false">' + SHADOW + inner + '</svg>'; }
+
+  var ART = {
+    transf: svg(B(40, 52, 56, 48, 14, .1) + B(104, 52, 56, 48, 14, .1) + B(10, 46, 40, 60, 18) + B(150, 46, 40, 60, 18) +
+      B(14, 94, 172, 50, 12) + H(18, 96, 164, 14, 8) + SEAM(14, 186, 122) +
+      G(-8, 74, 84, B(58, 70, 32, 28, 7)) + G(9, 128, 84, B(112, 72, 30, 26, 7))),
+    bed2: svg(B(22, 34, 156, 70, 14, .08) + B(10, 46, 34, 98, 14) + B(156, 46, 34, 98, 14) +
+      B(34, 92, 132, 52, 14) + H(38, 94, 124, 14, 8) + SEAM(34, 166, 120) +
+      G(-6, 72, 78, B(54, 66, 36, 24, 10)) + G(7, 130, 76, B(112, 64, 36, 24, 10))),
+    bed3: svg(B(20, 52, 50, 54, 13, .08) + B(75, 44, 50, 62, 13, .08) + B(130, 52, 50, 54, 13, .08) + B(168, 66, 22, 46, 8) +
+      B(8, 98, 184, 46, 10) + H(12, 100, 176, 12, 6) + SEAM(8, 192, 122)),
+    chbed: svg(B(50, 46, 100, 48, 10, .1) + B(38, 88, 124, 56, 10) + H(42, 90, 116, 14, 6) + SEAM(38, 162, 118) +
+      G(-7, 100, 76, B(70, 58, 60, 36, 8))),
+    pear: svg(
+      '<path d="M100 12C152 12 178 70 171 112C167 142 138 150 100 150C62 150 33 142 29 112C22 70 48 12 100 12Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M100 14C94 60 94 104 100 149" fill="none" stroke="#000" stroke-opacity=".15" stroke-width="1.5"/>' +
+      '<path d="M40 112C50 140 150 140 160 112C150 150 50 150 40 112Z" fill="#000" opacity=".1"/>' +
+      '<ellipse cx="74" cy="56" rx="20" ry="11" transform="rotate(-28 74 56)" fill="#fff" opacity=".22"/>'),
+    kids: svg(
+      '<g transform="translate(100 150) scale(.66) translate(-100 -150)">' +
+      '<path d="M100 12C152 12 178 70 171 112C167 142 138 150 100 150C62 150 33 142 29 112C22 70 48 12 100 12Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M100 14C94 60 94 104 100 149" fill="none" stroke="#000" stroke-opacity=".15" stroke-width="2"/>' +
+      '<ellipse cx="74" cy="56" rx="20" ry="11" transform="rotate(-28 74 56)" fill="#fff" opacity=".22"/></g>'),
+    beanSofa: svg(
+      '<path d="M14 124C6 72 26 28 70 24L130 24C174 28 194 72 186 124C184 144 164 150 100 150C36 150 16 144 14 124Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M40 112C58 92 142 92 160 112C152 138 48 138 40 112Z" fill="#fff" opacity=".2"/>' +
+      '<path d="M40 112C58 92 142 92 160 112" fill="none" stroke="#000" stroke-opacity=".15" stroke-width="1.5"/>' +
+      '<path d="M14 124C20 146 60 150 100 150C140 150 180 146 186 124C176 142 24 142 14 124Z" fill="#000" opacity=".1"/>' +
+      '<ellipse cx="64" cy="48" rx="26" ry="11" fill="#fff" opacity=".22"/>'),
+    cube: svg(
+      '<path d="M38 82C38 62 52 56 100 56C148 56 162 62 162 82L162 130C162 146 150 150 100 150C50 150 38 146 38 130Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M44 78C44 66 60 61 100 61C140 61 156 66 156 78C156 90 140 95 100 95C60 95 44 90 44 78Z" fill="#fff" opacity=".2"/>' +
+      '<path d="M38 130C38 146 50 150 100 150C150 150 162 146 162 130C150 140 50 140 38 130Z" fill="#000" opacity=".1"/>'),
+    round: svg(
+      '<path d="M44 70L44 128C44 146 70 150 100 150C130 150 156 146 156 128L156 70Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M44 128C44 146 70 150 100 150C130 150 156 146 156 128C140 138 60 138 44 128Z" fill="#000" opacity=".1"/>' +
+      '<ellipse cx="100" cy="70" rx="56" ry="20" fill="var(--c)"' + ST + '/>' +
+      '<ellipse cx="100" cy="70" rx="56" ry="20" fill="#fff" opacity=".2"/>'),
+    flat: svg(
+      '<path d="M30 108L30 126C30 142 62 150 100 150C138 150 170 142 170 126L170 108Z" fill="var(--c)"' + ST + '/>' +
+      '<path d="M30 126C30 142 62 150 100 150C138 150 170 142 170 126C150 136 50 136 30 126Z" fill="#000" opacity=".1"/>' +
+      '<ellipse cx="100" cy="108" rx="70" ry="22" fill="var(--c)"' + ST + '/>' +
+      '<ellipse cx="100" cy="108" rx="70" ry="22" fill="#fff" opacity=".2"/>')
+  };
+
+  /* ---------- catalog ---------- */
+  var PRODUCTS = [
+    { id: "transf", cat: "sofa", name: { kk: "Диван-трансформер", ru: "Диван-трансформер" },
+      text: { kk: "Жазылып, толыққанды ұйықтайтын орынға айналады. Жиегінде жұмсақ валиктер мен жастықтар бар.", ru: "Раскладывается в полноценное спальное место. По краям мягкие валики и подушки." } },
+    { id: "bed2", cat: "sofa", name: { kk: "Диван-төсек, 2 орындық", ru: "Диван-кровать двухместный" },
+      text: { kk: "Биік арқасы бар ықшам диван. Жазғанда ұйықтайтын орын болады.", ru: "Компактный диван с высокой спинкой. В разложенном виде спальное место." } },
+    { id: "bed3", cat: "sofa", name: { kk: "Диван-төсек, 3 орындық", ru: "Диван-кровать трёхместный" },
+      text: { kk: "Үш үлкен жастығы бар кең диван. Қонаққа да, күнделікті демалуға да жарайды.", ru: "Широкий диван с тремя большими подушками. Подходит и гостям, и для ежедневного отдыха." } },
+    { id: "chbed", cat: "chair", name: { kk: "Кресло-төсек", ru: "Кресло-кровать" },
+      text: { kk: "Бір адамға арналған жиналмалы кресло. Жазылса төсекке айналады.", ru: "Складное кресло на одного. Раскладывается в кровать." } },
+    { id: "pear", cat: "bag", name: { kk: "Кресло-мешок «Груша»", ru: "Кресло-мешок «Груша»" },
+      text: { kk: "Денеңіздің пішінін қабылдайтын жұмсақ қаңқасыз кресло.", ru: "Мягкое бескаркасное кресло, принимает форму тела." } },
+    { id: "kids", cat: "bag", name: { kk: "Балалар кресло-мешогі", ru: "Детское кресло-мешок" },
+      text: { kk: "Кішкентай өлшемді жұмсақ кресло, балалар бөлмесіне арналған.", ru: "Небольшое мягкое кресло для детской комнаты." } },
+    { id: "beanSofa", cat: "bag", name: { kk: "Диван-мешок", ru: "Диван-мешок" },
+      text: { kk: "Кең әрі жайлы қаңқасыз диван. Демалуға, фильм көруге ыңғайлы.", ru: "Просторный бескаркасный диван для отдыха и фильмов." } },
+    { id: "cube", cat: "pouf", name: { kk: "Пуф-куб", ru: "Пуф-куб" },
+      text: { kk: "Отыруға да, аяқ қоюға да жарайтын төртбұрышты пуф.", ru: "Квадратный пуф: можно сидеть или поставить ноги." } },
+    { id: "round", cat: "pouf", name: { kk: "Дөңгелек пуф", ru: "Круглый пуф" },
+      text: { kk: "Бөлмеге жинақы келетін дөңгелек пуф.", ru: "Аккуратный круглый пуф для любой комнаты." } },
+    { id: "flat", cat: "pouf", name: { kk: "Пуф-таблетка", ru: "Пуф-таблетка" },
+      text: { kk: "Аласа әрі кең пуф. Қонақтарға қосымша орын болады.", ru: "Низкий и широкий пуф. Дополнительное место для гостей." } }
+  ];
+  var CATS = ["all", "sofa", "chair", "bag", "pouf"];
+
+  /* ---------- state ---------- */
+  var S = { lang: "kk", cat: "all", hero: DEFAULT_COLOR, colors: {}, cart: [], name: "", note: "" };
+  PRODUCTS.forEach(function (p) { S.colors[p.id] = DEFAULT_COLOR; });
+
+  function load() {
+    try {
+      var l = localStorage.getItem("ardea-lang"); if (l === "kk" || l === "ru") S.lang = l;
+      var c = JSON.parse(localStorage.getItem("ardea-cart") || "[]");
+      if (Array.isArray(c)) S.cart = c.filter(function (it) { return byId(it.id) && COLORS[it.ci] && it.q > 0; });
+    } catch (e) {}
+  }
+  function save() {
+    try { localStorage.setItem("ardea-lang", S.lang); localStorage.setItem("ardea-cart", JSON.stringify(S.cart)); } catch (e) {}
+  }
+  function byId(id) { return PRODUCTS.filter(function (p) { return p.id === id; })[0]; }
+  function tr(k) { return T[S.lang][k]; }
+  function cname(i) { return COLORS[i][S.lang === "kk" ? 0 : 1]; }
+  function $(s) { return document.querySelector(s); }
+
+  /* ---------- render ---------- */
+  function swatchHtml(attr, current) {
+    return COLORS.map(function (c, i) {
+      return '<button class="sw" type="button" style="--sw:' + c[2] + '" ' + attr + ' data-i="' + i + '" aria-label="' + cname(i) + '" title="' + cname(i) + '" aria-pressed="' + (i === current) + '"></button>';
+    }).join("");
+  }
+
+  function renderHero() {
+    $("#hero-art").innerHTML = ART.transf;
+    $(".stage").style.setProperty("--c", COLORS[S.hero][2]);
+    $(".hero").style.setProperty("--c", COLORS[S.hero][2]);
+    $("#hero-color-name").textContent = cname(S.hero);
+    $("#hero-sw").innerHTML = swatchHtml('data-hero', S.hero);
+    $("#hero-sw").setAttribute("aria-label", tr("pickAll"));
+  }
+
+  function renderTabs() {
+    $("#tabs").innerHTML = CATS.map(function (c) {
+      return '<button class="tab" type="button" data-cat="' + c + '" aria-pressed="' + (c === S.cat) + '">' + tr(c) + '</button>';
+    }).join("");
+  }
+
+  function renderGrid() {
+    var list = PRODUCTS.filter(function (p) { return S.cat === "all" || p.cat === S.cat; });
+    $("#grid").innerHTML = list.map(function (p) {
+      var ci = S.colors[p.id];
+      return '<article class="card" data-card="' + p.id + '" style="--c:' + COLORS[ci][2] + '">' +
+        '<div class="pic" aria-hidden="true">' + ART[p.id] + '</div>' +
+        '<div class="body"><h3>' + p.name[S.lang] + '</h3><p>' + p.text[S.lang] + '</p>' +
+        '<div class="colorline"><span class="dot"></span><span>' + tr("color") + ': <b data-cname>' + cname(ci) + '</b></span></div>' +
+        '<div class="swatches" role="group" aria-label="' + tr("color") + '">' + swatchHtml('data-card-sw="' + p.id + '"', ci) + '</div>' +
+        '<button class="btn" type="button" data-add="' + p.id + '">' + tr("add") + '</button></div></article>';
+    }).join("");
+  }
+
+  function updateCard(id) {
+    var card = $('[data-card="' + id + '"]');
+    if (!card) return;
+    var ci = S.colors[id];
+    card.style.setProperty("--c", COLORS[ci][2]);
+    card.querySelector("[data-cname]").textContent = cname(ci);
+    card.querySelectorAll(".sw").forEach(function (b) { b.setAttribute("aria-pressed", String(+b.dataset.i === ci)); });
+  }
+
+  function count() { return S.cart.reduce(function (n, it) { return n + it.q; }, 0); }
+
+  function orderText() {
+    var lines = [tr("greet")];
+    S.cart.forEach(function (it, n) {
+      lines.push((n + 1) + ". " + byId(it.id).name[S.lang] + " — " + cname(it.ci) + " — " + it.q + " " + tr("pcs"));
+    });
+    if (S.name.trim()) lines.push(tr("nameL") + ": " + S.name.trim());
+    if (S.note.trim()) lines.push(tr("noteL") + ": " + S.note.trim());
+    return lines.join("\n");
+  }
+
+  function renderCart() {
+    $("#badge").textContent = count();
+    var empty = S.cart.length === 0;
+    $("#cart-form").hidden = empty;
+    $("#cart-foot").hidden = empty;
+    $("#cart-list").innerHTML = empty ? '<p class="empty">' + tr("empty") + '</p>' :
+      S.cart.map(function (it, k) {
+        var p = byId(it.id);
+        return '<div class="item"><div class="thumb" style="--c:' + COLORS[it.ci][2] + '" aria-hidden="true">' + ART[it.id] + '</div>' +
+          '<div><h3>' + p.name[S.lang] + '</h3>' +
+          '<div class="col"><span class="dot" style="background:' + COLORS[it.ci][2] + '"></span>' + cname(it.ci) + '</div>' +
+          '<div class="ctl"><div class="qty"><button type="button" data-dec="' + k + '" aria-label="−">−</button><span>' + it.q + '</span><button type="button" data-inc="' + k + '" aria-label="+">+</button></div>' +
+          '<button class="link" type="button" data-del="' + k + '">' + tr("remove") + '</button></div></div></div>';
+      }).join("");
+    if (!empty) $("#send").href = WA + "?text=" + encodeURIComponent(orderText());
+  }
+
+  function applyLang() {
+    document.documentElement.lang = S.lang === "kk" ? "kk" : "ru";
+    document.querySelectorAll("[data-t]").forEach(function (el) { el.textContent = tr(el.dataset.t); });
+    document.querySelectorAll("[data-th]").forEach(function (el) { el.innerHTML = tr(el.dataset.th); });
+    document.querySelectorAll("[data-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.lang === S.lang)); });
+    renderHero(); renderTabs(); renderGrid(); renderCart();
+  }
+
+  /* ---------- actions ---------- */
+  function copyText(text, btn, fallback) {
+    var old = btn.textContent;
+    var done = function (ok) {
+      btn.textContent = ok ? tr("copied") : fallback;
+      setTimeout(function () { btn.textContent = old; }, 2200);
+    };
+    try { navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); }); }
+    catch (e) { done(false); }
+  }
+
+  function openCart() { $("#sheet").hidden = false; document.body.style.overflow = "hidden"; $("#close-cart").focus(); }
+  function closeCart() { $("#sheet").hidden = true; document.body.style.overflow = ""; $("#open-cart").focus(); }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    var el;
+    if ((el = t.closest("[data-lang]"))) { S.lang = el.dataset.lang; save(); applyLang(); return; }
+    if ((el = t.closest("[data-hero]"))) {
+      S.hero = +el.dataset.i;
+      PRODUCTS.forEach(function (p) { S.colors[p.id] = S.hero; updateCard(p.id); });
+      renderHero(); return;
+    }
+    if ((el = t.closest("[data-card-sw]"))) { S.colors[el.dataset.cardSw] = +el.dataset.i; updateCard(el.dataset.cardSw); return; }
+    if ((el = t.closest("[data-cat]"))) { S.cat = el.dataset.cat; renderTabs(); renderGrid(); return; }
+    if ((el = t.closest("[data-add]"))) {
+      var id = el.dataset.add, ci = S.colors[id];
+      var f = S.cart.filter(function (it) { return it.id === id && it.ci === ci; })[0];
+      if (f) f.q += 1; else S.cart.push({ id: id, ci: ci, q: 1 });
+      save(); renderCart();
+      el.textContent = tr("added");
+      setTimeout(function () { el.textContent = tr("add"); }, 1400);
+      return;
+    }
+    if ((el = t.closest("[data-inc]"))) { S.cart[+el.dataset.inc].q += 1; save(); renderCart(); return; }
+    if ((el = t.closest("[data-dec]"))) {
+      var it = S.cart[+el.dataset.dec]; it.q -= 1;
+      if (it.q <= 0) S.cart.splice(+el.dataset.dec, 1);
+      save(); renderCart(); return;
+    }
+    if ((el = t.closest("[data-del]"))) { S.cart.splice(+el.dataset.del, 1); save(); renderCart(); return; }
+    if (t.closest("#open-cart")) { openCart(); return; }
+    if (t.closest("[data-close]")) { closeCart(); return; }
+    if (t.closest("#copy-order")) { copyText(orderText(), $("#copy-order"), orderText()); return; }
+    if ((el = t.closest("[data-copy-phone]"))) { copyText(PHONE, el, "8 771 138 60 57"); return; }
+  });
+
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#sheet").hidden) closeCart(); });
+  $("#ord-name").addEventListener("input", function (e) { S.name = e.target.value; renderCart(); });
+  $("#ord-note").addEventListener("input", function (e) { S.note = e.target.value; renderCart(); });
+
+  load();
+  applyLang();
+})();
+</script>
+
+</body></html>
